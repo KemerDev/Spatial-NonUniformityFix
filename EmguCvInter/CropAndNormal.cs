@@ -16,15 +16,18 @@ using System.ComponentModel.Design;
 
 namespace EmguCvInter
 {
-    public class CropAndNormal
+    public class CropAndNormal : IDisposable
     {
+        public bool Disposed;
         private PictureBox p2;
         private PictureBox p3;
+        private PictureBox p4;
 
-        public CropAndNormal(PictureBox p2, PictureBox p3)
+        public CropAndNormal(PictureBox p2, PictureBox p3, PictureBox p4)
         { 
             this.p2 = p2;
             this.p3 = p3;
+            this.p4 = p4;
         }
 
         public void ConnectedComponents(Image<Bgr, Byte> unprocessedImage, Image<Gray, Byte> nivImage)
@@ -48,22 +51,26 @@ namespace EmguCvInter
 
             try
             {
-
+                // 35ms run time
                 var original = unprocessedImage.Copy().Rotate(4, new Bgr());
                 var unProsImg = unprocessedImage.Convert<Gray, byte>().Rotate(4, new Gray());
+                // --------------
 
                 var x1Point = new Point();
                 var x2Point = new Point();
 
                 var corners = new Image<Gray, float>(original.Size);
 
+                // 69ms run time
                 CvInvoke.CornerHarris(unProsImg, corners, 10, 19, 0.04);
+                // --------------
 
                 CvInvoke.Dilate(corners, corners, dilateMatrixKernel, new Point(0, 0), 2, 0, new MCvScalar(255, 0, 0));
 
                 corners.MinMax(out matMin, out matMax, out matMinLoc, out matMaxLoc);
 
                 Stopwatch sw = Stopwatch.StartNew();
+                // 0.0045ms run time
                 for (int i = 530; i < 540; i++)
                 {
                     for (int j = 255; j < 280; j++)
@@ -73,7 +80,6 @@ namespace EmguCvInter
                             x1Point.X = i;
                             x1Point.Y = j;
                         }
-
                     }
                 }
 
@@ -88,19 +94,25 @@ namespace EmguCvInter
                         }
                     }
                 }
+                // --------------
                 sw.Stop();
 
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
 
+                // 85.2501ms run time
                 var rect = createRectangle(x1Point.X, x1Point.Y, x2Point.X, x2Point.Y);
 
-                original.ROI = rect;
+                unProsImg.ROI = rect;
+                nivImage.ROI = rect;
 
-                var cropedTile = original.Copy();
+                var cropedTile = unProsImg.Copy();
+                var cropedNiv = nivImage.Copy();
 
                 original.ROI = Rectangle.Empty;
+                nivImage.ROI = Rectangle.Empty;
 
-                this.p3.Image = cropedTile.ToBitmap();
+                nivalation(cropedTile, cropedNiv);
+                // --------------
 
                 //((col > 200 && col < 280 && row > 500 && row < 550) || 
                 //(col > 200 && col < 280 && row > 1950 && row < 2000) ||
@@ -114,6 +126,20 @@ namespace EmguCvInter
             }
         }
 
+        private void nivalation(Image<Gray, Byte> cropedTile, Image<Gray, Byte> cropedNiv)
+        {
+
+            for (int i = 0; i < cropedTile.Cols; i++)
+            {
+                for (int j = 0; j < cropedTile.Rows; j++)
+                {
+
+                }
+            }
+
+            this.p2.Image = cropedTile.ToBitmap();
+        }
+
         private static Rectangle createRectangle(int x1, int y1, int x2, int y2)
         {
             Rectangle rect = new Rectangle();
@@ -124,6 +150,12 @@ namespace EmguCvInter
             rect.Height = Math.Abs(y1 - y2);
 
             return rect;
+        }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            Disposed = true;
         }
     }
 }

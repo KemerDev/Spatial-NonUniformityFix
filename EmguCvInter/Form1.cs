@@ -25,23 +25,20 @@ namespace EmguCvInter
 
         private void initImages(int count)
         {
-
-            CropAndNormal processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3);
-
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox4.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            //Mat histoReq = new Mat();
-
-            if (count > -1 && count < imageUnList.Count)
+            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4))
             {
-                pictureBox1.Image = imageUnList[count].ToBitmap();
-                processedImageCC.ConnectedComponents(imageUnList[count], imageNivList[count]);
-            }
 
-            //pictureBox2.Image = histoReq.ToBitmap();
+                if (count > -1 && count < imageUnList.Count)
+                {
+                    pictureBox1.Image = imageUnList[count].ToBitmap();
+                    processedImageCC.ConnectedComponents(imageUnList[count], imageNivList[count]);
+                }
+            }
         }
         public PictureBox MyPictureBox2
         {
@@ -56,6 +53,14 @@ namespace EmguCvInter
             get
             {
                 return pictureBox3;
+            }
+        }
+
+        public PictureBox MyPictureBox4
+        {
+            get
+            {
+                return pictureBox4;
             }
         }
 
