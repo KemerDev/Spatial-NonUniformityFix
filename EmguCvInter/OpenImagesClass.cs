@@ -14,16 +14,16 @@ namespace EmguCvInter
 {
     public class OpenImagesClass
     {
-        public List<Image<Gray, Byte>> UnprocessedImageOpener()
+        public List<Image<Bgr, Byte>> UnprocessedImageOpener()
         {
-            List<Image<Gray, Byte>> imageList = new List<Image<Gray, byte>>();
+            List<Image<Bgr, Byte>> imageList = new List<Image<Bgr, byte>>();
             try
             {
                 string[] fileArray = Directory.GetFiles(@"C:\Users\kemerios\Desktop\imageProcess\unprosF");
 
                 foreach (string file in fileArray)
                 {
-                    imageList.Add(new Image<Gray, Byte>(file));
+                    imageList.Add(new Image<Bgr, Byte>(file));
                 }
 
                 return imageList;

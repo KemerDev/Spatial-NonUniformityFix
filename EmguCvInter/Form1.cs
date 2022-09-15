@@ -1,5 +1,3 @@
-using static EmguCvInter.OpenImagesClass;
-using static EmguCvInter.CropAndNormal;
 using System;
 using System.Diagnostics;
 using Emgu.CV;
@@ -12,20 +10,24 @@ namespace EmguCvInter
     {
         OpenImagesClass UnprocessedImageList = new OpenImagesClass();
         OpenImagesClass NivImageList = new OpenImagesClass();
-        CropAndNormal processedImageCC = new CropAndNormal();
+        
+
         private int counter = -1;
-        private List<Image<Gray, Byte>> imageUnList = null;
+        private List<Image<Bgr, Byte>> imageUnList = null;
         private List<Image<Gray, Byte>> imageNivList = null;
 
         public Form1()
         {
             InitializeComponent();
-            this.imageUnList = UnprocessedImageList.UnprocessedImageOpener();
-            this.imageNivList = NivImageList.NivImageOpener();
+            imageUnList = UnprocessedImageList.UnprocessedImageOpener();
+            imageNivList = NivImageList.NivImageOpener();
         }
 
         private void initImages(int count)
         {
+
+            CropAndNormal processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3);
+
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -33,16 +35,30 @@ namespace EmguCvInter
 
             //Mat histoReq = new Mat();
 
-            if (count > -1 && count < this.imageUnList.Count)
+            if (count > -1 && count < imageUnList.Count)
             {
-                pictureBox1.Image = this.imageUnList[count].ToBitmap();
-                pictureBox2.Image = processedImageCC.ConnectedComponents(this.imageUnList[count], this.imageNivList[count])[0].ToBitmap();
-                pictureBox3.Image = processedImageCC.ConnectedComponents(this.imageUnList[count], this.imageNivList[count])[1].ToBitmap();
-                pictureBox4.Image = processedImageCC.ConnectedComponents(this.imageUnList[count], this.imageNivList[count])[2].ToBitmap();
+                pictureBox1.Image = imageUnList[count].ToBitmap();
+                processedImageCC.ConnectedComponents(imageUnList[count], imageNivList[count]);
             }
 
             //pictureBox2.Image = histoReq.ToBitmap();
         }
+        public PictureBox MyPictureBox2
+        {
+            get
+            {
+                return pictureBox2;
+            }
+        }
+
+        public PictureBox MyPictureBox3
+        {
+            get
+            {
+                return pictureBox3;
+            }
+        }
+
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {

@@ -1,5 +1,4 @@
-﻿using static EmguCvInter.Form1;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,90 +9,121 @@ using Emgu.CV.Util;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
 using Emgu.CV.UI;
-using System.Security.Cryptography.X509Certificates;
+using Numpy;
 using System.Diagnostics;
+using OpenCL.Net;
+using System.ComponentModel.Design;
 
 namespace EmguCvInter
 {
     public class CropAndNormal
     {
-        public List<Image<Gray, Byte>>? ConnectedComponents(Image<Gray, Byte> unprocessedImage, Image<Gray, Byte> nivImage)
+        private PictureBox p2;
+        private PictureBox p3;
+
+        public CropAndNormal(PictureBox p2, PictureBox p3)
+        { 
+            this.p2 = p2;
+            this.p3 = p3;
+        }
+
+        public void ConnectedComponents(Image<Bgr, Byte> unprocessedImage, Image<Gray, Byte> nivImage)
         {
 
-            if (unprocessedImage == null)
+            float[,] dilateKernel =
             {
-                return null;
-            }
+                { 1, 1, 1, 1, 1},
+                { 1, 1, 1, 1, 1},
+                { 1, 1, 1, 1, 1},
+                { 1, 1, 1, 1, 1},
+                { 1, 1, 1, 1, 1},
+            };
+
+            double[] matMax;
+            double[] matMin;
+            Point[] matMinLoc;
+            Point[] matMaxLoc;
+
+            ConvolutionKernelF dilateMatrixKernel = new ConvolutionKernelF(dilateKernel);;
 
             try
             {
 
-                List<Image<Gray, Byte>> finalList = new List<Image<Gray, Byte>>();
+                var original = unprocessedImage.Copy().Rotate(4, new Bgr());
+                var unProsImg = unprocessedImage.Convert<Gray, byte>().Rotate(4, new Gray());
 
-                var original = unprocessedImage.Copy();
-                var unProsImg = unprocessedImage.Copy();
-                var AdaptiveThresImg = unprocessedImage.Copy();
-                var ContourImg = unprocessedImage.Copy();
+                var x1Point = new Point();
+                var x2Point = new Point();
 
-                CvInvoke.AdaptiveThreshold(unProsImg, AdaptiveThresImg, 255, AdaptiveThresholdType.MeanC, ThresholdType.Binary, 5, 0);
-                unProsImg = unProsImg.SmoothGaussian(25).ThresholdBinary(new Gray(30), new Gray(255));
+                var corners = new Image<Gray, float>(original.Size);
 
-                finalList.Add(unProsImg);
-                VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+                CvInvoke.CornerHarris(unProsImg, corners, 10, 19, 0.04);
 
-                Mat hier = new Mat();
+                CvInvoke.Dilate(corners, corners, dilateMatrixKernel, new Point(0, 0), 2, 0, new MCvScalar(255, 0, 0));
 
-                finalList.Add(AdaptiveThresImg);
-                CvInvoke.FindContours(unProsImg, contours, hier, RetrType.Tree, ChainApproxMethod.ChainApproxSimple);
-                CvInvoke.DrawContours(original, contours[1], -1, new MCvScalar(255, 0, 0));
+                corners.MinMax(out matMin, out matMax, out matMinLoc, out matMaxLoc);
 
-                finalList.Add(original);
+                Stopwatch sw = Stopwatch.StartNew();
+                for (int i = 530; i < 540; i++)
+                {
+                    for (int j = 255; j < 280; j++)
+                    {
+                        if (corners.Data[j, i, 0] > 0.003 * matMax[0])
+                        {
+                            x1Point.X = i;
+                            x1Point.Y = j;
+                        }
 
+                    }
+                }
 
-                /*var unprosImg = unprocessedImage.Rotate(4, new Gray(255));
-                var nivImg = nivImage.Rotate(4, new Gray(255));
+                for (int i = 1970; i < 1985; i++)
+                {
+                    for (int j = 1725; j < 1755; j++)
+                    {
+                        if (corners.Data[j, i, 0] > 0.003 * matMax[0])
+                        {
+                            x2Point.X = i;
+                            x2Point.Y = j;
+                        }
+                    }
+                }
+                sw.Stop();
 
-                Rectangle rect = new Rectangle(525, 255, 1450, 1470);
+                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
 
-                unprosImg.ROI = rect;
-                nivImg.ROI = rect;
+                var rect = createRectangle(x1Point.X, x1Point.Y, x2Point.X, x2Point.Y);
 
-                var unprosStep = unprosImg.Copy();
-                finalList.Add(unprosStep);
+                original.ROI = rect;
 
-                var nivStep = nivImg.Copy();
+                var cropedTile = original.Copy();
 
-                var NormalizedImg = unprosStep.Copy();
+                original.ROI = Rectangle.Empty;
 
-                CvInvoke.Normalize(unprosStep, NormalizedImg, 0, 255, Emgu.CV.CvEnum.NormType.MinMax, Emgu.CV.CvEnum.DepthType.Cv8U);
+                this.p3.Image = cropedTile.ToBitmap();
 
-                finalList.Add(nivStep);
-                finalList.Add(NormalizedImg);
+                //((col > 200 && col < 280 && row > 500 && row < 550) || 
+                //(col > 200 && col < 280 && row > 1950 && row < 2000) ||
+                //(col > 1710 && col < 1730 && row > 500 && row < 550) ||
+                //(col > 1730 && col < 1750 && row > 1950 && row < 2000))
 
-                //unprosImg.SetValue(new Gray(255));
-                //unprosImg._Mul(unprosStep);
-
-                unprosImg.ROI = Rectangle.Empty;
-                nivImg.ROI = Rectangle.Empty;
-
-                //var mask = nivImage.SmoothGaussian(3).ThresholdBinaryInv(new Gray(30), new Gray(255));
-                //finalList.Add(mask);*/
-
-                return finalList;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                return null;
             }
         }
-    }
 
-    public class normalization
-    {
-        public normalization()
+        private static Rectangle createRectangle(int x1, int y1, int x2, int y2)
         {
+            Rectangle rect = new Rectangle();
 
+            rect.X = Math.Min(x1, x2);
+            rect.Y = Math.Min(y1, y2);
+            rect.Width = Math.Abs(x1 - x2);
+            rect.Height = Math.Abs(y1 - y2);
+
+            return rect;
         }
     }
 }

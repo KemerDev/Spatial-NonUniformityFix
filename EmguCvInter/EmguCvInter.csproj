@@ -12,6 +12,7 @@
     <PackageReference Include="Emgu.CV.Bitmap" Version="4.5.5.4823" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.5.5.4823" />
     <PackageReference Include="Emgu.CV.UI" Version="4.5.5.4823" />
+    <PackageReference Include="Numpy" Version="3.10.1.30" />
     <PackageReference Include="OpenCL.Net" Version="2.2.9" />
   </ItemGroup>
 
