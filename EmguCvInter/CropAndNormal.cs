@@ -13,6 +13,8 @@ using Numpy;
 using System.Diagnostics;
 using OpenCL.Net;
 using System.ComponentModel.Design;
+using System.Drawing.Imaging;
+using Emgu.CV.Dnn;
 
 namespace EmguCvInter
 {
@@ -69,7 +71,6 @@ namespace EmguCvInter
 
                 corners.MinMax(out matMin, out matMax, out matMinLoc, out matMaxLoc);
 
-                Stopwatch sw = Stopwatch.StartNew();
                 // 0.0045ms run time
                 for (int i = 530; i < 540; i++)
                 {
@@ -95,9 +96,6 @@ namespace EmguCvInter
                     }
                 }
                 // --------------
-                sw.Stop();
-
-                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
 
                 // 85.2501ms run time
                 var rect = createRectangle(x1Point.X, x1Point.Y, x2Point.X, x2Point.Y);
@@ -126,18 +124,47 @@ namespace EmguCvInter
             }
         }
 
-        private void nivalation(Image<Gray, Byte> cropedTile, Image<Gray, Byte> cropedNiv)
+        private unsafe void nivalation(Image<Gray, Byte> cropedTile, Image<Gray, Byte> cropedNiv)
         {
+            this.p2.Image = cropedTile.ToBitmap();
+            this.p3.Image = cropedNiv.ToBitmap();
+            int pixelData = 0;
 
-            for (int i = 0; i < cropedTile.Cols; i++)
+            try
             {
-                for (int j = 0; j < cropedTile.Rows; j++)
-                {
+                Stopwatch sw = Stopwatch.StartNew();
 
+                // ~120ms run time
+                for (int i = 0; i < cropedTile.Cols; i++)
+                {
+                    for (int j = 0; j < cropedTile.Rows; j++)
+                    {
+
+                        if (cropedTile.Data[j, i, 0] == 0)
+                        {
+                            pixelData = cropedTile.Data[j, i, 0] / cropedNiv.Data[j, i, 0];
+                        }
+                        else
+                        {
+                            pixelData = cropedNiv.Data[j, i, 0] / cropedTile.Data[j, i, 0];
+                        }
+                        
+                        cropedTile.Data[j, i, 0] = (byte)pixelData;
+
+                    }
                 }
+                // --------------
+                sw.Stop();
+
+                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
             }
 
-            this.p2.Image = cropedTile.ToBitmap();
+            this.p4.Image = cropedTile.ToBitmap();
+
         }
 
         private static Rectangle createRectangle(int x1, int y1, int x2, int y2)
