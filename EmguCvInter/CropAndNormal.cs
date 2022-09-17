@@ -132,7 +132,7 @@ namespace EmguCvInter
 
             try
             {
-                Stopwatch sw = Stopwatch.StartNew();
+                /*Stopwatch sw = Stopwatch.StartNew();
 
                 // ~120ms run time
                 for (int i = 0; i < cropedTile.Cols; i++)
@@ -156,7 +156,46 @@ namespace EmguCvInter
                 // --------------
                 sw.Stop();
 
+                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);*/
+
+                /*Parallel.For(0, cropedTile.Cols * cropedTile.Rows, coord => {
+                    int x = coord / cropedTile.Rows;
+                    int y = coord % cropedTile.Rows;
+
+                    if (cropedTile.Data[y, x, 0] == 0)
+                    {
+                        pixelData = cropedTile.Data[y, x, 0] / cropedNiv.Data[y, x, 0];
+                    }
+                    else
+                    {
+                        pixelData = cropedNiv.Data[y, x, 0] / cropedTile.Data[y, x, 0];
+                    }
+
+                    cropedTile.Data[y, x, 0] = (byte)pixelData;
+                });*/
+
+                Stopwatch sw = Stopwatch.StartNew();
+
+                // ~Avg 72ms run time
+                Parallel.For(0, cropedTile.Cols, i => {
+                    for (int j = 0; j < cropedTile.Rows; j++)
+                    {
+                        if (cropedTile.Data[j, i, 0] == 0)
+                        {
+                            pixelData = cropedTile.Data[j, i, 0] / cropedNiv.Data[j, i, 0];
+                        }
+                        else
+                        {
+                            pixelData = cropedNiv.Data[j, i, 0] / cropedTile.Data[j, i, 0];
+                        }
+
+                        cropedTile.Data[j, i, 0] = (byte)pixelData;
+                    }
+                });
+                sw.Stop();
+
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
+
             }
             catch (Exception ex)
             {
