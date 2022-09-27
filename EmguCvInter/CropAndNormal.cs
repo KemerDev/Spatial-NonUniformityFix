@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using static System.Net.Mime.MediaTypeNames;
 using System.Windows.Forms.VisualStyles;
+using Emgu.CV.Reg;
 
 namespace EmguCvInter
 {
@@ -159,14 +160,7 @@ namespace EmguCvInter
                     {
                         for (int j = 0; j < bitmapDataTile.Width; j++)
                         {
-                            if ((TilePointer[0] + TilePointer[1] + TilePointer[2]) / 3 == 0)
-                            {
-                                pixelData = ((TilePointer[0] + TilePointer[1] + TilePointer[2]) / 3) / ((NivPointer[0] + NivPointer[1] + NivPointer[2]) / 3);
-                            }
-                            else
-                            {
-                                pixelData = ((NivPointer[0] + NivPointer[1] + NivPointer[2]) / 3) / ((TilePointer[0] + TilePointer[1] + TilePointer[2]) / 3);
-                            }
+                            pixelData = 255 * (TilePointer[0] - 0) / (255 - NivPointer[0]);
 
                             NivalatedPointer[0] = (byte)pixelData;
                             NivalatedPointer[1] = (byte)pixelData;
