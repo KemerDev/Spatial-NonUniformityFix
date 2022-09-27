@@ -30,13 +30,13 @@ namespace EmguCvInter
             pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox4.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4))
+            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4, count))
             {
 
                 if (count > -1 && count < imageUnList.Count)
                 {
                     pictureBox1.Image = imageUnList[count].ToBitmap();
-                    processedImageCC.ConnectedComponents(imageUnList[count], imageNivList[count]);
+                    processedImageCC.CropImage(imageUnList[count], imageNivList[count]);
                 }
             }
         }

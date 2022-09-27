@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 using Emgu;
 using Emgu.CV;
 using Emgu.CV.Util;
@@ -11,10 +12,9 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.UI;
 using Numpy;
 using System.Diagnostics;
-using OpenCL.Net;
-using System.ComponentModel.Design;
 using System.Drawing.Imaging;
-using Emgu.CV.Dnn;
+using static System.Net.Mime.MediaTypeNames;
+using System.Windows.Forms.VisualStyles;
 
 namespace EmguCvInter
 {
@@ -24,24 +24,24 @@ namespace EmguCvInter
         private PictureBox p2;
         private PictureBox p3;
         private PictureBox p4;
+        private int Count;
 
-        public CropAndNormal(PictureBox p2, PictureBox p3, PictureBox p4)
+        public CropAndNormal(PictureBox p2, PictureBox p3, PictureBox p4, int Count)
         { 
             this.p2 = p2;
             this.p3 = p3;
             this.p4 = p4;
+            this.Count = Count;
         }
 
-        public void ConnectedComponents(Image<Bgr, Byte> unprocessedImage, Image<Gray, Byte> nivImage)
+        public void CropImage(Image<Bgr, Byte> unprocessedImage, Image<Gray, Byte> nivImage)
         {
 
             float[,] dilateKernel =
             {
-                { 1, 1, 1, 1, 1},
-                { 1, 1, 1, 1, 1},
-                { 1, 1, 1, 1, 1},
-                { 1, 1, 1, 1, 1},
-                { 1, 1, 1, 1, 1},
+                { 1, 1, 1},
+                { 1, 1, 1},
+                { 1, 1, 1}
             };
 
             double[] matMax;
@@ -55,7 +55,15 @@ namespace EmguCvInter
             {
                 // 35ms run time
                 var original = unprocessedImage.Copy().Rotate(4, new Bgr());
+
                 var unProsImg = unprocessedImage.Convert<Gray, byte>().Rotate(4, new Gray());
+
+                /*
+                var newTest = MakeGrayscale3(original.ToBitmap());
+
+                this.p2.Image = newTest;*/
+
+                this.p3.Image = unProsImg.ToBitmap();
                 // --------------
 
                 var x1Point = new Point();
@@ -109,7 +117,9 @@ namespace EmguCvInter
                 original.ROI = Rectangle.Empty;
                 nivImage.ROI = Rectangle.Empty;
 
-                nivalation(cropedTile, cropedNiv);
+                this.p2.Image = cropedTile.ToBitmap();
+
+                nivalation(cropedTile.ToBitmap(), cropedNiv.ToBitmap());
                 // --------------
 
                 //((col > 200 && col < 280 && row > 500 && row < 550) || 
@@ -124,58 +134,79 @@ namespace EmguCvInter
             }
         }
 
-        private unsafe void nivalation(Image<Gray, Byte> cropedTile, Image<Gray, Byte> cropedNiv)
+        private void nivalation(Bitmap cropedTile, Bitmap cropedNiv)
         {
-            this.p2.Image = cropedTile.ToBitmap();
-            this.p3.Image = cropedNiv.ToBitmap();
-            int pixelData = 0;
+            Stopwatch sw = Stopwatch.StartNew();
+
+            var nivalated = new Bitmap(cropedNiv.Width, cropedNiv.Height, PixelFormat.Format32bppRgb);
 
             try
             {
-                /*Stopwatch sw = Stopwatch.StartNew();
+                BitmapData bitmapDataTile = cropedTile.LockBits(new Rectangle(0, 0, cropedTile.Width, cropedTile.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+                BitmapData bitmapDataNiv = cropedNiv.LockBits(new Rectangle(0, 0, cropedNiv.Width, cropedNiv.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+                BitmapData bitmapDataNivalated = nivalated.LockBits(new Rectangle(0, 0, nivalated.Width, nivalated.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
 
-                // ~120ms run time
-                for (int i = 0; i < cropedTile.Cols; i++)
+                int pixelData = 0;
+                string savePath = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
+
+                unsafe
                 {
-                    for (int j = 0; j < cropedTile.Rows; j++)
+                    byte* TilePointer = (byte*)bitmapDataTile.Scan0;
+                    byte* NivPointer = (byte*)bitmapDataNiv.Scan0;
+                    byte* NivalatedPointer = (byte*)bitmapDataNivalated.Scan0;
+
+                    for (int i = 0; i < bitmapDataTile.Height; i++)
                     {
-
-                        if (cropedTile.Data[j, i, 0] == 0)
+                        for (int j = 0; j < bitmapDataTile.Width; j++)
                         {
-                            pixelData = cropedTile.Data[j, i, 0] / cropedNiv.Data[j, i, 0];
-                        }
-                        else
-                        {
-                            pixelData = cropedNiv.Data[j, i, 0] / cropedTile.Data[j, i, 0];
-                        }
-                        
-                        cropedTile.Data[j, i, 0] = (byte)pixelData;
+                            if ((TilePointer[0] + TilePointer[1] + TilePointer[2]) / 3 == 0)
+                            {
+                                pixelData = ((TilePointer[0] + TilePointer[1] + TilePointer[2]) / 3) / ((NivPointer[0] + NivPointer[1] + NivPointer[2]) / 3);
+                            }
+                            else
+                            {
+                                pixelData = ((NivPointer[0] + NivPointer[1] + NivPointer[2]) / 3) / ((TilePointer[0] + TilePointer[1] + TilePointer[2]) / 3);
+                            }
 
+                            NivalatedPointer[0] = (byte)pixelData;
+                            NivalatedPointer[1] = (byte)pixelData;
+                            NivalatedPointer[2] = (byte)pixelData;
+
+                            TilePointer += 4;
+                            NivPointer += 4;
+                            NivalatedPointer += 4;
+                        }
+
+                        TilePointer += bitmapDataTile.Stride - (bitmapDataTile.Width * 4);
+                        NivPointer += bitmapDataNiv.Stride - (bitmapDataNiv.Width * 4);
+                        NivalatedPointer += bitmapDataTile.Stride - (bitmapDataTile.Width * 4);
                     }
+
+                    nivalated.UnlockBits(bitmapDataNivalated);
+                    cropedTile.UnlockBits(bitmapDataTile);
+                    cropedNiv.UnlockBits(bitmapDataNiv);
+
+                    sw.Stop();
+
+                    Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
+
+                    nivalated.Save(savePath + Count.ToString() + ".png", ImageFormat.Png);
                 }
-                // --------------
-                sw.Stop();
+            }
+            finally
+            {
+                if (nivalated != null)
+                {
+                    nivalated.Dispose();
+                }
+            }
 
-                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);*/
+            
 
-                /*Parallel.For(0, cropedTile.Cols * cropedTile.Rows, coord => {
-                    int x = coord / cropedTile.Rows;
-                    int y = coord % cropedTile.Rows;
+            /*int pixelData = 0;
 
-                    if (cropedTile.Data[y, x, 0] == 0)
-                    {
-                        pixelData = cropedTile.Data[y, x, 0] / cropedNiv.Data[y, x, 0];
-                    }
-                    else
-                    {
-                        pixelData = cropedNiv.Data[y, x, 0] / cropedTile.Data[y, x, 0];
-                    }
-
-                    cropedTile.Data[y, x, 0] = (byte)pixelData;
-                });*/
-
-                Stopwatch sw = Stopwatch.StartNew();
-
+            try
+            {
                 // ~Avg 72ms run time
                 Parallel.For(0, cropedTile.Cols, i => {
                     for (int j = 0; j < cropedTile.Rows; j++)
@@ -192,18 +223,58 @@ namespace EmguCvInter
                         cropedTile.Data[j, i, 0] = (byte)pixelData;
                     }
                 });
-                sw.Stop();
-
-                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
-
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
             }
 
-            this.p4.Image = cropedTile.ToBitmap();
+            this.p4.Image = cropedTile.ToBitmap();*/
 
+        }
+
+        public static Bitmap MakeGrayscale3(Bitmap image)
+        {
+            Bitmap returnMap = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppRgb);
+            BitmapData bitmapData1 = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+            BitmapData bitmapData2 = returnMap.LockBits(new Rectangle(0, 0, returnMap.Width, returnMap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+            
+            int a = 0;
+            
+            unsafe
+            {
+                byte* imagePointer1 = (byte*)bitmapData1.Scan0;
+                byte* imagePointer2 = (byte*)bitmapData2.Scan0;
+
+                for (int i = 0; i < bitmapData1.Height; i++)
+                {
+                    for (int j = 0; j < bitmapData1.Width; j++)
+                    {
+                        // write the logic implementation here
+                        a = (imagePointer1[0] + imagePointer1[1] +
+                             imagePointer1[2]) / 3;
+
+                        imagePointer2[0] = (byte)a;
+                        imagePointer2[1] = (byte)a;
+                        imagePointer2[2] = (byte)a;
+
+                        //4 bytes per pixel
+                        imagePointer1 += 4;
+                        imagePointer2 += 4;
+                    }
+
+                     //4 bytes per pixel
+                    imagePointer1 += bitmapData1.Stride -
+                                    (bitmapData1.Width * 4);
+                    imagePointer2 += bitmapData1.Stride -
+                                    (bitmapData1.Width * 4);
+                }
+            }
+
+            returnMap.UnlockBits(bitmapData2);
+            image.UnlockBits(bitmapData1);
+
+            return returnMap;
         }
 
         private static Rectangle createRectangle(int x1, int y1, int x2, int y2)
