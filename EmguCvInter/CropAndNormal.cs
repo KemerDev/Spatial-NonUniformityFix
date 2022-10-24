@@ -34,30 +34,15 @@ namespace EmguCvInter
 
         public void CropImage(Image<Bgr, Byte> unprocessedImage, Image<Gray, Byte> nivImage)
         {
-            SkewCorrection newSkew = new SkewCorrection();
-
-            double[] matMax;
-            double[] matMin;
-            Point[] matMinLoc;
-            Point[] matMaxLoc;
-
-            float[,] dilateKernel =
-            {
-                { 1, 1, 1},
-                { 1, 1, 1},
-                { 1, 1, 1}
-            };
-
-            ConvolutionKernelF dilateMatrixKernel = new ConvolutionKernelF(dilateKernel);
-
             try
             {
                 // 35ms run time
-                var original = newSkew.SkewOrg(nivImage);
+                var original = unprocessedImage.Convert<Gray, byte>().Rotate(4, new Gray());
 
-                var skewNiv = newSkew.SkewNiv(nivImage);
+                var skewNiv = nivImage.Rotate(4, new Gray());
 
-                this.p2.Image = original;
+                Point point1 = new Point(570, 300);
+                Point point2 = new Point(1950, 1680);
 
                 /*Stopwatch sw = Stopwatch.StartNew();
                 sw.Stop();
@@ -65,29 +50,33 @@ namespace EmguCvInter
 
                 // --------------
 
-                //Nivalation(unprocessedImage.ToBitmap(), nivImage.ToBitmap());
-                // --------------
+                var rect = createRectangle(point1.X, point1.Y, point2.X, point2.Y);
 
-                //((col > 200 && col < 280 && row > 500 && row < 550) || 
-                //(col > 200 && col < 280 && row > 1950 && row < 2000) ||
-                //(col > 1710 && col < 1730 && row > 500 && row < 550) ||
-                //(col > 1730 && col < 1750 && row > 1950 && row < 2000))
+                original.ROI = rect;
+                skewNiv.ROI = rect;
+
+                var cropedTile = original.Copy();
+                var cropedNiv = skewNiv.Copy();
+
+                original.ROI = Rectangle.Empty;
+                skewNiv.ROI = Rectangle.Empty;
+
+                Nivalation(cropedTile.ToBitmap(), cropedNiv.ToBitmap());
 
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
-            finally
-            {
-                newSkew.Dispose();
-            }
         }
 
         private void Nivalation(Bitmap cropedTile, Bitmap cropedNiv)
         {
 
-            var nivalated = new Bitmap(cropedNiv.Width, cropedNiv.Height, PixelFormat.Format32bppRgb);
+            this.p2.Image = cropedTile;
+            this.p3.Image = cropedNiv;
+
+            var nivalated = new Bitmap(cropedTile.Width, cropedTile.Height, PixelFormat.Format32bppRgb);
             string savePath = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
             double[,] pixelData = new double[nivalated.Width, nivalated.Height];
 
@@ -95,13 +84,12 @@ namespace EmguCvInter
             {
                 unsafe
                 {
+
                     BitmapData bitmapDataTile = cropedTile.LockBits(new Rectangle(0, 0, cropedTile.Width, cropedTile.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
                     BitmapData bitmapDataNiv = cropedNiv.LockBits(new Rectangle(0, 0, cropedNiv.Width, cropedNiv.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
 
                     byte* TilePointer = (byte*)bitmapDataTile.Scan0;
                     byte* NivPointer = (byte*)bitmapDataNiv.Scan0;
-
-                    Stopwatch sw = Stopwatch.StartNew();
 
                     for (int i = 0; i < bitmapDataTile.Height; i++)
                     {
@@ -116,9 +104,6 @@ namespace EmguCvInter
                         TilePointer += bitmapDataTile.Stride - (bitmapDataTile.Width * 4);
                         NivPointer += bitmapDataNiv.Stride - (bitmapDataNiv.Width * 4);
                     }
-
-                    sw.Stop();
-                    Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
 
                     cropedTile.UnlockBits(bitmapDataTile);
                     cropedNiv.UnlockBits(bitmapDataNiv);
@@ -159,6 +144,64 @@ namespace EmguCvInter
                 }
 
                 nivalated.Save(savePath + Count.ToString() + ".png", ImageFormat.Png);
+
+                var matrixL = nivalated.Width / 12;
+
+                float[,] convolve = new float[matrixL, matrixL];
+
+                Parallel.For(0, matrixL, i =>
+                {
+                    for (int j = 0; j < matrixL; j++)
+                    {
+                        convolve[i, j] = (float)1 / (float)matrixL;
+                    }
+                });
+
+                float[,] nivImageData = new float[nivalated.Width, nivalated.Height];
+
+                unsafe
+                {
+                    BitmapData bitmapDataNiv = nivalated.LockBits(new Rectangle(0, 0, nivalated.Width, nivalated.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+                    byte* NivalatedPointer = (byte*)bitmapDataNiv.Scan0;
+
+                    for (int i = 0; i < nivalated.Height; i++)
+                    {
+                        for (int j = 0; j < nivalated.Width; j++)
+                        {
+                            nivImageData[j, i] = NivalatedPointer[0];
+
+                            NivalatedPointer += 4;
+                        }
+                        NivalatedPointer += bitmapDataNiv.Stride - (bitmapDataNiv.Width * 4);
+                    }
+                    nivalated.UnlockBits(bitmapDataNiv);
+                }
+
+                float[] meanValues = new float[12];
+                float tempValue = 0;
+
+                Stopwatch sw = Stopwatch.StartNew();
+
+                for (int k = 0; k < 12; k++)
+                {
+                    for (int i = matrixL * k; i < matrixL * (k + 1); i++)
+                    {
+                        for (int j = matrixL * k; j < matrixL * (k + 1); j++)
+                        {
+                            tempValue += nivImageData[i, j];
+                        }
+                    }
+
+                    meanValues[k] = tempValue / matrixL;
+                }
+
+                sw.Stop();
+                Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
+
+                var emguImg = nivalated.ToImage<Gray, byte>();
+
+                this.p4.Image = emguImg.ToBitmap();
+
             }
             finally
             {
