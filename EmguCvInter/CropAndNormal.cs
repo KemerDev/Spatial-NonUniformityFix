@@ -24,6 +24,8 @@ namespace EmguCvInter
         private PictureBox p4;
         private int Count;
 
+        CalcStdDiv stdDiv = new CalcStdDiv();
+
         public CropAndNormal(PictureBox p2, PictureBox p3, PictureBox p4, int Count)
         {
             this.p2 = p2;
@@ -145,55 +147,14 @@ namespace EmguCvInter
 
                 nivalated.Save(savePath + Count.ToString() + ".png", ImageFormat.Png);
 
-                var matrixL = nivalated.Width / 12;
-
-                float[,] convolve = new float[matrixL, matrixL];
-
-                Parallel.For(0, matrixL, i =>
-                {
-                    for (int j = 0; j < matrixL; j++)
-                    {
-                        convolve[i, j] = (float)1 / (float)matrixL;
-                    }
-                });
-
-                float[,] nivImageData = new float[nivalated.Width, nivalated.Height];
-
-                unsafe
-                {
-                    BitmapData bitmapDataNiv = nivalated.LockBits(new Rectangle(0, 0, nivalated.Width, nivalated.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
-                    byte* NivalatedPointer = (byte*)bitmapDataNiv.Scan0;
-
-                    for (int i = 0; i < nivalated.Height; i++)
-                    {
-                        for (int j = 0; j < nivalated.Width; j++)
-                        {
-                            nivImageData[j, i] = NivalatedPointer[0];
-
-                            NivalatedPointer += 4;
-                        }
-                        NivalatedPointer += bitmapDataNiv.Stride - (bitmapDataNiv.Width * 4);
-                    }
-                    nivalated.UnlockBits(bitmapDataNiv);
-                }
-
-                float[] meanValues = new float[12];
-                float tempValue = 0;
-
                 Stopwatch sw = Stopwatch.StartNew();
+                var test1 = stdDiv.CalcVoid(cropedTile);
+                var test2 = stdDiv.CalcVoid(cropedNiv);
+                var test3 = stdDiv.CalcVoid(nivalated);
 
-                for (int k = 0; k < 12; k++)
-                {
-                    for (int i = matrixL * k; i < matrixL * (k + 1); i++)
-                    {
-                        for (int j = matrixL * k; j < matrixL * (k + 1); j++)
-                        {
-                            tempValue += nivImageData[i, j];
-                        }
-                    }
-
-                    meanValues[k] = tempValue / matrixL;
-                }
+                Debug.WriteLine(test1);
+                Debug.WriteLine(test2);
+                Debug.WriteLine(test3);
 
                 sw.Stop();
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
