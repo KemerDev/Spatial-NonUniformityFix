@@ -148,13 +148,9 @@ namespace EmguCvInter
                 nivalated.Save(savePath + Count.ToString() + ".png", ImageFormat.Png);
 
                 Stopwatch sw = Stopwatch.StartNew();
-                var test1 = stdDiv.CalcVoid(cropedTile);
-                var test2 = stdDiv.CalcVoid(cropedNiv);
-                var test3 = stdDiv.CalcVoid(nivalated);
-
-                Debug.WriteLine(test1);
-                Debug.WriteLine(test2);
-                Debug.WriteLine(test3);
+                var test1 = stdDiv.CalcPartMean(cropedTile);
+                var test2 = stdDiv.CalcPartMean(cropedNiv);
+                var test3 = stdDiv.CalcPartMean(nivalated);
 
                 sw.Stop();
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);

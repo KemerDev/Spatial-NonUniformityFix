@@ -9,12 +9,7 @@ namespace EmguCvInter
 {
     public class CalcStdDiv
     {
-        public CalcStdDiv()
-        {
-
-        }
-
-        public float[] CalcVoid(Bitmap bmp)
+        public double[] CalcPartMean(Bitmap bmp)
         {
             var matrixL = bmp.Width / 12;
 
@@ -39,12 +34,12 @@ namespace EmguCvInter
             }
 
             float[] nivImageData1D = nivImageData.Cast<float>().Select(x => x).ToArray();
-
             float[] meanValues = new float[12];
+
             float tempValue = 0;
 
             // mean value
-            for (int k = 0; k < 12; k++)
+            Parallel.For(0, 12, k =>
             {
                 for (int i = matrixL * k; i < matrixL * (k + 1); i++)
                 {
@@ -52,10 +47,27 @@ namespace EmguCvInter
                 }
                 meanValues[k] = tempValue / matrixL;
                 tempValue = 0;
-            }
+            });
 
-            return meanValues;
-            //
+            return CalcPartDev(matrixL, nivImageData1D, meanValues);
+        }
+
+        private double[] CalcPartDev(int matrixL, float[] nivImageData1D, float[] meanValues)
+        {
+            double tempValue = 0;
+            double[] tempDev = new double[12];
+
+            Parallel.For(0, 12, k =>
+            {
+                for (int i = matrixL * k; i < matrixL * (k + 1); i++)
+                {
+                    tempValue += Math.Pow(nivImageData1D[i] - meanValues[k], 2);
+                }
+
+                tempDev[k] = Math.Sqrt(tempValue / (matrixL - 1));
+            });
+
+            return tempDev;
         }
     }
 }
