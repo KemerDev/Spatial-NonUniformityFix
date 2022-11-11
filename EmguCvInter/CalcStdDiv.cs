@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Emgu.CV;
+using Emgu.CV.Structure;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Imaging;
@@ -10,65 +12,78 @@ namespace EmguCvInter
 {
     public class CalcStdDiv
     {
-        public double[] CalcPartMean(Bitmap bmp)
+        public double CalcDev(Bitmap bmp)
         {
-            var matrixL = bmp.Width / 12;
+            int rows = 4;
+            int cols = 3;
 
-            float[,] nivImageData = new float[bmp.Width,bmp.Height];
+            var splitImg = SplitImageToParts(bmp, rows, cols);
 
-            unsafe
+            double[,] stdValues = new double[rows, cols];
+
+            for (int i = 0; i < splitImg.GetLength(0); i++)
             {
-                BitmapData bitmapDataNiv = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
-                byte* NivalatedPointer = (byte*)bitmapDataNiv.Scan0;
-
-                for (int i = 0; i < bmp.Height; i++)
+                for (int j = 0; j < splitImg.GetLength(1); j++)
                 {
-                    for (int j = 0; j < bmp.Width; j++)
-                    {
-                        nivImageData[j, i] = NivalatedPointer[0];
+                    MCvScalar mean = new MCvScalar();
+                    MCvScalar stdv = new MCvScalar();
 
-                        NivalatedPointer += 4;
-                    }
-                    NivalatedPointer += bitmapDataNiv.Stride - (bitmapDataNiv.Width * 4);
+                    CvInvoke.MeanStdDev(splitImg[i, j].ToImage<Gray, byte>(), ref mean, ref stdv);
+
+                    stdValues[i, j] = stdv.V0;
                 }
-                bmp.UnlockBits(bitmapDataNiv);
             }
 
-            float[] nivImageData1D = nivImageData.Cast<float>().Select(x => x).ToArray();
-            float[] meanValues = new float[12];
-
-            float tempValue = 0;
-
-            // mean value
-            Parallel.For(0, 12, k =>
-            {
-                for (int i = matrixL * k; i < matrixL * (k + 1); i++)
-                {
-                    tempValue += nivImageData1D[i];
-                }
-                meanValues[k] = tempValue / matrixL;
-                tempValue = 0;
-            });
-
-            return CalcPartDev(matrixL, nivImageData1D, meanValues);
+            return CalcFinalDev(stdValues);
         }
 
-        private double[] CalcPartDev(int matrixL, float[] nivImageData1D, float[] meanValues)
+        private double CalcFinalDev(double[,] stdValues)
         {
-            double tempValue = 0;
-            double[] tempDev = new double[12];
+            double tempMean = 0;
+            double tempVar = 0;
+            double tempDev = 0;
+            double[] tempDivArray = new double[12];
 
-            Parallel.For(0, 12, k =>
+            var tempStdVals = stdValues.Cast<double>().Select(x => x).ToArray();
+
+            for (int i = 0; i < tempStdVals.Length; i++)
             {
-                for (int i = matrixL * k; i < matrixL * (k + 1); i++)
+                tempMean += tempStdVals[i];
+            }
+
+            tempMean = tempMean / tempStdVals.Length;
+
+            for (int i = 0; i < tempStdVals.Length; i++)
+            {
+                tempVar += Math.Pow(tempStdVals[i] - tempMean, 2);
+            }
+
+            tempDev = tempVar / tempStdVals.Length;
+
+            return Math.Sqrt(tempDev);
+        }
+
+        private Bitmap[,] SplitImageToParts(Bitmap bmp, int rows, int cols)
+        {
+            var partsArray = new Bitmap[rows, cols];
+
+            int width = bmp.Width;
+            int height = bmp.Height;
+
+            int cropImgWidth = width / cols;
+            int cropImgHeight = height / rows;
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
                 {
-                    tempValue += Math.Pow(nivImageData1D[i] - meanValues[k], 2);
+                    partsArray[i, j] = new Bitmap(cropImgWidth, cropImgHeight);
+                    var graphics = Graphics.FromImage(partsArray[i, j]);
+                    graphics.DrawImage(bmp, new Rectangle(0, 0, cropImgWidth, cropImgHeight), new Rectangle(j * cropImgWidth, i * cropImgHeight, cropImgWidth, cropImgHeight), GraphicsUnit.Pixel);
+                    graphics.Dispose();
                 }
-
-                tempDev[k] = Math.Sqrt(tempValue / (matrixL - 1));
-            });
-
-            return tempDev;
+            }
+            return partsArray;
         }
     }
 }

@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing;
 using Emgu;
 using Emgu.CV;
 using Emgu.CV.Util;
@@ -147,9 +142,10 @@ namespace EmguCvInter
                 nivalated.Save(savePath + Count.ToString() + ".png", ImageFormat.Png);
 
                 Stopwatch sw = Stopwatch.StartNew();
-                var divTile = stdDiv.CalcPartMean(cropedTile);
-                var divNiv = stdDiv.CalcPartMean(cropedNiv);
-                var divProc = stdDiv.CalcPartMean(nivalated);
+
+                var divTile = stdDiv.CalcDev(cropedTile);
+                var divNiv = stdDiv.CalcDev(cropedNiv);
+                var divProc = stdDiv.CalcDev(nivalated);
 
                 sw.Stop();
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
