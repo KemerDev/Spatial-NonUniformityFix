@@ -12,14 +12,16 @@ namespace EmguCvInter
 {
     public class CalcStdDiv
     {
+        private int rows = 4;
+        private int cols = 3;
+        private double[,] stdMean;
+
         public double CalcDev(Bitmap bmp)
         {
-            int rows = 4;
-            int cols = 3;
-
-            var splitImg = SplitImageToParts(bmp, rows, cols);
+            var splitImg = SplitImageToParts(bmp);
 
             double[,] stdValues = new double[rows, cols];
+            stdMean = new double[rows, cols];
 
             for (int i = 0; i < splitImg.GetLength(0); i++)
             {
@@ -31,6 +33,7 @@ namespace EmguCvInter
                     CvInvoke.MeanStdDev(splitImg[i, j].ToImage<Gray, byte>(), ref mean, ref stdv);
 
                     stdValues[i, j] = stdv.V0;
+                    stdMean[i, j] = mean.V0;
                 }
             }
 
@@ -63,7 +66,7 @@ namespace EmguCvInter
             return Math.Sqrt(tempDev);
         }
 
-        private Bitmap[,] SplitImageToParts(Bitmap bmp, int rows, int cols)
+        private Bitmap[,] SplitImageToParts(Bitmap bmp)
         {
             var partsArray = new Bitmap[rows, cols];
 
