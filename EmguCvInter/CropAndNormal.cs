@@ -74,7 +74,6 @@ namespace EmguCvInter
 
         private void Nivalation(Bitmap cropedTile, Bitmap cropedNiv)
         {
-
             this.p2.Image = cropedTile;
             this.p3.Image = cropedNiv;
 
@@ -148,9 +147,9 @@ namespace EmguCvInter
                 nivalated.Save(savePath + Count.ToString() + ".png", ImageFormat.Png);
 
                 Stopwatch sw = Stopwatch.StartNew();
-                var test1 = stdDiv.CalcPartMean(cropedTile);
-                var test2 = stdDiv.CalcPartMean(cropedNiv);
-                var test3 = stdDiv.CalcPartMean(nivalated);
+                var divTile = stdDiv.CalcPartMean(cropedTile);
+                var divNiv = stdDiv.CalcPartMean(cropedNiv);
+                var divProc = stdDiv.CalcPartMean(nivalated);
 
                 sw.Stop();
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
