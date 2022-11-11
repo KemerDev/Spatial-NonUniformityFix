@@ -12,13 +12,59 @@ namespace EmguCvInter
 {
     public class CalcStdDiv
     {
+        private Bitmap[,] splitImg;
+        private double[,] stdMean;
         private int rows = 4;
         private int cols = 3;
-        private double[,] stdMean;
+        private int width;
+        private int height;
+        private int cropImgWidth;
+        private int cropImgHeight;
+
+        public unsafe Bitmap createNewImg()
+        {
+            for (int i = 0; i < splitImg.GetLength(0); i++)
+            {
+                for (int j = 0; j < splitImg.GetLength(1); j++)
+                {
+                    BitmapData splitImgData = splitImg[i, j].LockBits(new Rectangle(0, 0, cropImgWidth, cropImgHeight), ImageLockMode.ReadWrite, PixelFormat.Format32bppRgb);
+                    byte* splitImgPointer = (byte*)splitImgData.Scan0;
+
+                    for (int k = 0; k < cropImgHeight; k++)
+                    {
+                        for (int l = 0; l < cropImgWidth; l++)
+                        {
+                            splitImgPointer[0] = (byte)stdMean[i, j];
+                            splitImgPointer[1] = (byte)stdMean[i, j];
+                            splitImgPointer[2] = (byte)stdMean[i, j];
+
+                            splitImgPointer += 4;
+                        }
+                        splitImgPointer += splitImgData.Stride - (splitImgData.Width * 4);
+                    }
+                    splitImg[i, j].UnlockBits(splitImgData);
+                }
+            }
+
+            Bitmap bmp = new Bitmap(width, height);
+
+            using (var graphics = Graphics.FromImage(bmp))
+            {
+                for (int i = 0; i < splitImg.GetLength(0); i++)
+                {
+                    for (int j = 0; j < splitImg.GetLength(1); j++)
+                    {
+                        graphics.DrawImage(splitImg[i, j], cropImgWidth * j, cropImgHeight * i);
+                    }
+                }
+            }
+
+            return bmp;
+        }
 
         public double CalcDev(Bitmap bmp)
         {
-            var splitImg = SplitImageToParts(bmp);
+            splitImg = SplitImageToParts(bmp);
 
             double[,] stdValues = new double[rows, cols];
             stdMean = new double[rows, cols];
@@ -70,22 +116,25 @@ namespace EmguCvInter
         {
             var partsArray = new Bitmap[rows, cols];
 
-            int width = bmp.Width;
-            int height = bmp.Height;
+            width = bmp.Width;
+            height = bmp.Height;
 
-            int cropImgWidth = width / cols;
-            int cropImgHeight = height / rows;
+            cropImgWidth = width / cols;
+            cropImgHeight = height / rows;
 
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < cols; j++)
                 {
                     partsArray[i, j] = new Bitmap(cropImgWidth, cropImgHeight);
-                    var graphics = Graphics.FromImage(partsArray[i, j]);
-                    graphics.DrawImage(bmp, new Rectangle(0, 0, cropImgWidth, cropImgHeight), new Rectangle(j * cropImgWidth, i * cropImgHeight, cropImgWidth, cropImgHeight), GraphicsUnit.Pixel);
-                    graphics.Dispose();
+
+                    using (var graphics = Graphics.FromImage(partsArray[i, j]))
+                    {
+                        graphics.DrawImage(bmp, new Rectangle(0, 0, cropImgWidth, cropImgHeight), new Rectangle(j * cropImgWidth, i * cropImgHeight, cropImgWidth, cropImgHeight), GraphicsUnit.Pixel);
+                    }
                 }
             }
+
             return partsArray;
         }
     }

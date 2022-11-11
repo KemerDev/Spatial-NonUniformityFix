@@ -17,15 +17,17 @@ namespace EmguCvInter
         private PictureBox p2;
         private PictureBox p3;
         private PictureBox p4;
+        private PictureBox p5;
         private int Count;
 
         CalcStdDiv stdDiv = new CalcStdDiv();
 
-        public CropAndNormal(PictureBox p2, PictureBox p3, PictureBox p4, int Count)
+        public CropAndNormal(PictureBox p2, PictureBox p3, PictureBox p4, PictureBox p5, int Count)
         {
             this.p2 = p2;
             this.p3 = p3;
             this.p4 = p4;
+            this.p5 = p5;
             this.Count = Count;
         }
 
@@ -153,6 +155,8 @@ namespace EmguCvInter
                 var emguImg = nivalated.ToImage<Gray, byte>();
 
                 this.p4.Image = emguImg.ToBitmap();
+
+                this.p5.Image = stdDiv.createNewImg();
 
             }
             finally

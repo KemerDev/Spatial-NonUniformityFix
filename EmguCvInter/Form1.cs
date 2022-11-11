@@ -29,8 +29,9 @@ namespace EmguCvInter
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox4.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox5.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4, count))
+            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4, MyPictureBox5, count))
             {
 
                 if (count > -1 && count < imageUnList.Count)
@@ -61,6 +62,14 @@ namespace EmguCvInter
             get
             {
                 return pictureBox4;
+            }
+        }
+
+        public PictureBox MyPictureBox5
+        {
+            get
+            {
+                return pictureBox5;
             }
         }
 
