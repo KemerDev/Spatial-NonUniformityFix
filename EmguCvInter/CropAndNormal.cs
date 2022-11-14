@@ -74,6 +74,12 @@ namespace EmguCvInter
             this.p2.Image = cropedTile;
             this.p3.Image = cropedNiv;
 
+            NivImgHomo nivProc = new NivImgHomo();
+
+            cropedNiv = nivProc.NivHomogeity(cropedNiv);
+
+            nivProc.Dispose();
+
             var nivalated = new Bitmap(cropedTile.Width, cropedTile.Height, PixelFormat.Format32bppRgb);
             string savePath = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
             double[,] pixelData = new double[nivalated.Width, nivalated.Height];
@@ -148,6 +154,8 @@ namespace EmguCvInter
                 var divTile = stdDiv.CalcDev(cropedTile);
                 var divNiv = stdDiv.CalcDev(cropedNiv);
                 var divProc = stdDiv.CalcDev(nivalated);
+
+                stdDiv.Dispose();
 
                 sw.Stop();
                 Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);

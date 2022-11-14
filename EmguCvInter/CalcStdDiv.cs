@@ -10,8 +10,9 @@ using System.Threading.Tasks;
 
 namespace EmguCvInter
 {
-    public class CalcStdDiv
+    public class CalcStdDiv : IDisposable
     {
+        public bool Disposed;
         private Bitmap[,] splitImg;
         private double[,] stdMean;
         private int rows = 4;
@@ -136,6 +137,12 @@ namespace EmguCvInter
             }
 
             return partsArray;
+        }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            Disposed = true;
         }
     }
 }
