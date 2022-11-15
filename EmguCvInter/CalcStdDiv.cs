@@ -13,16 +13,8 @@ namespace EmguCvInter
     public class CalcStdDiv : IDisposable
     {
         public bool Disposed;
-        private Bitmap[,] splitImg;
-        private double[,] stdMean;
-        private int rows = 4;
-        private int cols = 3;
-        private int width;
-        private int height;
-        private int cropImgWidth;
-        private int cropImgHeight;
 
-        public unsafe Bitmap createNewImg()
+        public unsafe Bitmap createNewPartImg(Bitmap[,] splitImg, double[,] stdMean, int width, int height, int cropImgWidth, int cropImgHeight)
         {
             for (int i = 0; i < splitImg.GetLength(0); i++)
             {
@@ -63,42 +55,19 @@ namespace EmguCvInter
             return bmp;
         }
 
-        public double CalcDev(Bitmap bmp)
-        {
-            splitImg = SplitImageToParts(bmp);
-
-            double[,] stdValues = new double[rows, cols];
-            stdMean = new double[rows, cols];
-
-            for (int i = 0; i < splitImg.GetLength(0); i++)
-            {
-                for (int j = 0; j < splitImg.GetLength(1); j++)
-                {
-                    MCvScalar mean = new MCvScalar();
-                    MCvScalar stdv = new MCvScalar();
-
-                    CvInvoke.MeanStdDev(splitImg[i, j].ToImage<Gray, byte>(), ref mean, ref stdv);
-
-                    stdValues[i, j] = stdv.V0;
-                    stdMean[i, j] = mean.V0;
-                }
-            }
-
-            return CalcFinalDev(stdValues);
-        }
-
-        private double CalcFinalDev(double[,] stdValues)
+        public double CalcFinalDev(double[,] stdValues)
         {
             double tempMean = 0;
             double tempVar = 0;
             double tempDev = 0;
             double[] tempDivArray = new double[12];
 
-            var tempStdVals = stdValues.Cast<double>().Select(x => x).ToArray();
+            var tempStdVals = stdValues.Cast<double>().Select(x => x).ToArray();    
 
             for (int i = 0; i < tempStdVals.Length; i++)
             {
                 tempMean += tempStdVals[i];
+
             }
 
             tempMean = tempMean / tempStdVals.Length;
@@ -111,32 +80,6 @@ namespace EmguCvInter
             tempDev = tempVar / tempStdVals.Length;
 
             return Math.Sqrt(tempDev);
-        }
-
-        private Bitmap[,] SplitImageToParts(Bitmap bmp)
-        {
-            var partsArray = new Bitmap[rows, cols];
-
-            width = bmp.Width;
-            height = bmp.Height;
-
-            cropImgWidth = width / cols;
-            cropImgHeight = height / rows;
-
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j < cols; j++)
-                {
-                    partsArray[i, j] = new Bitmap(cropImgWidth, cropImgHeight);
-
-                    using (var graphics = Graphics.FromImage(partsArray[i, j]))
-                    {
-                        graphics.DrawImage(bmp, new Rectangle(0, 0, cropImgWidth, cropImgHeight), new Rectangle(j * cropImgWidth, i * cropImgHeight, cropImgWidth, cropImgHeight), GraphicsUnit.Pixel);
-                    }
-                }
-            }
-
-            return partsArray;
         }
 
         public void Dispose()

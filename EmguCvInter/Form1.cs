@@ -38,6 +38,8 @@ namespace EmguCvInter
                 {
                     pictureBox1.Image = imageUnList[count].ToBitmap();
                     processedImageCC.CropImage(imageUnList[count], imageNivList[count]);
+                    processedImageCC.NivImgHomogeity();
+                    processedImageCC.Nivalation();
                 }
             }
         }
