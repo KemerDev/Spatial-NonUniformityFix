@@ -65,6 +65,19 @@ namespace EmguCvInter
 
             return partsArray;
         }
+
+        public Rectangle createRectangle(int x1, int y1, int x2, int y2)
+        {
+            Rectangle rect = new Rectangle();
+
+            rect.X = Math.Min(x1, x2);
+            rect.Y = Math.Min(y1, y2);
+            rect.Width = Math.Abs(x1 - x2);
+            rect.Height = Math.Abs(y1 - y2);
+
+            return rect;
+        }
+
         public void Dispose()
         {
             if (Disposed) return;

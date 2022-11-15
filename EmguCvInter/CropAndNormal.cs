@@ -56,7 +56,7 @@ namespace EmguCvInter
 
                 // --------------
 
-                var rect = createRectangle(point1.X, point1.Y, point2.X, point2.Y);
+                var rect = calculations.createRectangle(point1.X, point1.Y, point2.X, point2.Y);
 
                 original.ROI = rect;
                 skewNiv.ROI = rect;
@@ -225,18 +225,6 @@ namespace EmguCvInter
                     nivalated.Dispose();
                 }
             }
-        }
-
-        private static Rectangle createRectangle(int x1, int y1, int x2, int y2)
-        {
-            Rectangle rect = new Rectangle();
-
-            rect.X = Math.Min(x1, x2);
-            rect.Y = Math.Min(y1, y2);
-            rect.Width = Math.Abs(x1 - x2);
-            rect.Height = Math.Abs(y1 - y2);
-
-            return rect;
         }
 
         public void Dispose()
