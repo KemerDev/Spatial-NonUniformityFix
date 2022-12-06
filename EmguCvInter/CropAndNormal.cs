@@ -311,7 +311,21 @@ namespace EmguCvInter
             var cropImgWidth = cropedTileBmp.Width / cols;
             var cropImgHeight = cropedTileBmp.Height / rows;
 
-            var nivParts = calculations.SplitImageToParts(nivalated, rows, cols);
+            var picNiv = nivalated.ToImage<Gray, byte>();
+
+            var smoothNiv = new Image<Gray, byte>(nivalated.Width, nivalated.Height);
+
+            CvInvoke.GaussianBlur(picNiv, smoothNiv, new Size(33, 33), 0, 0);
+
+            var dividedNiv = new Image<Gray, byte>(nivalated.Width, nivalated.Height);
+
+            CvInvoke.Divide(picNiv, smoothNiv, dividedNiv, 170);
+
+            this.p4.Image = smoothNiv.ToBitmap();
+
+            this.p5.Image = dividedNiv.ToBitmap();
+
+            var nivParts = calculations.SplitImageToParts(dividedNiv.ToBitmap(), rows, cols);
             var meanStdvList = calculations.CalcPartMeanStdv(nivParts, rows, cols);
 
             this.p3.Image = stdDiv.createNewPartImg(nivParts, meanStdvList[1], cropedNivBmp.Width, cropedNivBmp.Height, cropImgWidth, cropImgHeight);
@@ -346,7 +360,6 @@ namespace EmguCvInter
                 fileWrite.WriteLine(space);
                 fileWrite.Flush();
             }
-
         }
 
         public void Dispose()
