@@ -240,7 +240,6 @@ namespace EmguCvInter
         {
 
             nivalated = new Bitmap(cropedTileBmp.Width, cropedTileBmp.Height, PixelFormat.Format32bppRgb);
-            string savePath = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
             double[,] pixelData = new double[nivalated.Width, nivalated.Height];
             double maxPixelVal = 0;
 
@@ -298,13 +297,12 @@ namespace EmguCvInter
             }
             sw.Stop();
             Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
-
-            nivalated.Save(savePath + Count.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
         }
 
         public void graphPrepare()
         {
-            string savePath = "C:\\Users\\kemerios\\Desktop\\imageProcess\\graphStuff\\";
+            string savePathCsv = "C:\\Users\\kemerios\\Desktop\\imageProcess\\graphStuff\\";
+            string savePathProc = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
 
             this.p2.Image = nivalated;
 
@@ -330,6 +328,10 @@ namespace EmguCvInter
 
             this.p3.Image = stdDiv.createNewPartImg(nivParts, meanStdvList[1], cropedNivBmp.Width, cropedNivBmp.Height, cropImgWidth, cropImgHeight);
 
+            var finalStdv = stdDiv.CalcFinalDev(meanStdvList[1]);
+
+            Debug.WriteLine(finalStdv);
+
             var picMean = 0d;
 
             for (int i = 0; i < meanStdvList[1].GetLength(0); i++)
@@ -342,7 +344,7 @@ namespace EmguCvInter
 
             picMean = picMean / (meanStdvList[1].GetLength(0) * meanStdvList[1].GetLength(1));
 
-            using (var fileWrite = new StreamWriter(File.Open(savePath + "output.csv", FileMode.Append)))
+            using (var fileWrite = new StreamWriter(File.Open(savePathCsv + "output.csv", FileMode.Append)))
             {
                 for (int i = 0; i < meanStdvList[1].GetLength(0); i++)
                 {
@@ -360,6 +362,8 @@ namespace EmguCvInter
                 fileWrite.WriteLine(space);
                 fileWrite.Flush();
             }
+
+            dividedNiv.ToBitmap().Save(savePathProc + Count.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
         }
 
         public void Dispose()
