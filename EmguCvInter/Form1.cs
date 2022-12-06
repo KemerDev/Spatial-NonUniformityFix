@@ -12,7 +12,8 @@ namespace EmguCvInter
         OpenImagesClass NivImageList = new OpenImagesClass();
         
 
-        private int counter = -1;
+        private int counterImg = -1;
+        private int counterNiv = -1;
         private List<Image<Bgr, Byte>> imageUnList = null;
         private List<Image<Gray, Byte>> imageNivList = null;
 
@@ -23,7 +24,7 @@ namespace EmguCvInter
             imageNivList = NivImageList.NivImageOpener();
         }
 
-        private void initImages(int count)
+        private void initImages(int countImg, int countNiv)
         {
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -31,15 +32,17 @@ namespace EmguCvInter
             pictureBox4.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox5.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4, MyPictureBox5, count))
+            using (var processedImageCC = new CropAndNormal(MyPictureBox2, MyPictureBox3, MyPictureBox4, MyPictureBox5, countImg))
             {
 
-                if (count > -1 && count < imageUnList.Count)
+                if (countImg > -1 && countImg < imageUnList.Count)
                 {
-                    pictureBox1.Image = imageUnList[count].ToBitmap();
-                    processedImageCC.CropImage(imageUnList[count], imageNivList[count]);
-                    processedImageCC.NivImgHomogeity();
-                    processedImageCC.Nivalation();
+                    pictureBox1.Image = imageUnList[countImg].ToBitmap();
+                    processedImageCC.CropImage(imageUnList[countImg], imageNivList[countNiv]);
+                    //processedImageCC.NivImgHomogeity();
+                    processedImageCC.NivalationUn();
+                    //processedImageCC.Nivalation();
+                    processedImageCC.graphPrepare();
                 }
             }
         }
@@ -83,19 +86,39 @@ namespace EmguCvInter
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (counter < this.imageUnList.Count)
+            if (counterImg < this.imageUnList.Count)
             {
-                counter++;
-                this.initImages(counter);
+                counterImg++;
+
+                if (counterNiv < 1)
+                {
+                    counterNiv++;
+                }
+                else
+                {
+                    counterNiv = 0;
+                }
+
+                this.initImages(counterImg, counterNiv);
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (counter > -1)
+            if (counterImg > -1)
             {
-                counter--;
-                this.initImages(counter);
+                counterImg--;
+
+                if (counterNiv == 0)
+                {
+                    counterNiv = 1;
+                }
+                else
+                {
+                    counterNiv = 0;
+                }
+
+                this.initImages(counterImg, counterNiv);
             }
         }
 
