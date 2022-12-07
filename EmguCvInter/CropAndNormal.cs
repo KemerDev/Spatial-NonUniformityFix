@@ -22,6 +22,7 @@ namespace EmguCvInter
         private Bitmap cropedNivBmp = null;
         private Bitmap cropedNivFinalBmp = null;
         private int lineCount = 0;
+        private double maxPixelVal;
 
         CalcStdDiv stdDiv = new CalcStdDiv();
         CalculationsClass calculations = new CalculationsClass();
@@ -66,6 +67,10 @@ namespace EmguCvInter
 
                 cropedTileBmp = cropedTile.ToBitmap();
                 cropedNivBmp = cropedNiv.ToBitmap();
+
+                maxPixelVal = calculations.FindArrayMaxVal(cropedTileBmp);
+
+                calculations.Dispose();
 
             }
             catch (Exception ex)
@@ -238,10 +243,9 @@ namespace EmguCvInter
 
         public void NivalationUn()
         {
-
             nivalated = new Bitmap(cropedTileBmp.Width, cropedTileBmp.Height, PixelFormat.Format32bppRgb);
-            double[,] pixelData = new double[nivalated.Width, nivalated.Height];
-            double maxPixelVal = 0;
+
+            Debug.WriteLine(maxPixelVal);
 
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -250,51 +254,39 @@ namespace EmguCvInter
 
                 BitmapData bitmapDataTile = cropedTileBmp.LockBits(new Rectangle(0, 0, cropedTileBmp.Width, cropedTileBmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
                 BitmapData bitmapDataNiv = cropedNivBmp.LockBits(new Rectangle(0, 0, cropedNivBmp.Width, cropedNivBmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+                BitmapData bitmapNivalated = nivalated.LockBits(new Rectangle(0, 0, nivalated.Width, nivalated.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
 
                 byte* TilePointer = (byte*)bitmapDataTile.Scan0;
                 byte* NivPointer = (byte*)bitmapDataNiv.Scan0;
+                byte* NivalatedPointer = (byte*)bitmapNivalated.Scan0;
 
                 for (int i = 0; i < bitmapDataTile.Height; i++)
                 {
                     for (int j = 0; j < bitmapDataTile.Width; j++)
                     {
-                        pixelData[j, i] = Math.Sqrt(255 * TilePointer[0] / NivPointer[0] + 1);
-                        maxPixelVal = Math.Max(maxPixelVal, pixelData[j, i]);
+                        var tempSqrt = Math.Sqrt(255.0 * TilePointer[0] / NivPointer[0] + 1);
+
+                        var tempVal = tempSqrt * 255.0 / maxPixelVal;
+
+                        NivalatedPointer[0] = (byte)tempVal;
+                        NivalatedPointer[1] = (byte)tempVal;
+                        NivalatedPointer[2] = (byte)tempVal;
 
                         TilePointer += 4;
                         NivPointer += 4;
+                        NivalatedPointer += 4;
                     }
 
                     TilePointer += bitmapDataTile.Stride - (bitmapDataTile.Width * 4);
                     NivPointer += bitmapDataNiv.Stride - (bitmapDataNiv.Width * 4);
+                    NivalatedPointer += bitmapNivalated.Stride - (bitmapNivalated.Width * 4);
                 }
 
                 cropedTileBmp.UnlockBits(bitmapDataTile);
                 cropedNivBmp.UnlockBits(bitmapDataNiv);
-            }
-
-            unsafe
-            {
-
-                BitmapData bitmapNivalated = nivalated.LockBits(new Rectangle(0, 0, nivalated.Width, nivalated.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
-                byte* NivalatedPointer = (byte*)bitmapNivalated.Scan0;
-
-                for (int i = 0; i < nivalated.Height; i++)
-                {
-                    for (int j = 0; j < nivalated.Width; j++)
-                    {
-                        var temp = pixelData[j, i] * 255 / maxPixelVal;
-
-                        NivalatedPointer[0] = (byte)temp;
-                        NivalatedPointer[1] = (byte)temp;
-                        NivalatedPointer[2] = (byte)temp;
-
-                        NivalatedPointer += 4;
-                    }
-                    NivalatedPointer += bitmapNivalated.Stride - (bitmapNivalated.Width * 4);
-                }
                 nivalated.UnlockBits(bitmapNivalated);
             }
+
             sw.Stop();
             Debug.WriteLine("Time taken: {0}ms", sw.Elapsed.TotalMilliseconds);
         }
@@ -304,10 +296,10 @@ namespace EmguCvInter
             string savePathCsv = "C:\\Users\\kemerios\\Desktop\\imageProcess\\graphStuff\\";
             string savePathProc = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
 
-            this.p2.Image = nivalated;
-
             var cropImgWidth = cropedTileBmp.Width / cols;
             var cropImgHeight = cropedTileBmp.Height / rows;
+
+            this.p2.Image = nivalated;
 
             var picNiv = nivalated.ToImage<Gray, byte>();
 
@@ -317,7 +309,7 @@ namespace EmguCvInter
 
             var dividedNiv = new Image<Gray, byte>(nivalated.Width, nivalated.Height);
 
-            CvInvoke.Divide(picNiv, smoothNiv, dividedNiv, 170);
+            CvInvoke.Divide(picNiv, smoothNiv, dividedNiv, maxPixelVal);
 
             this.p4.Image = smoothNiv.ToBitmap();
 
@@ -329,8 +321,6 @@ namespace EmguCvInter
             this.p3.Image = stdDiv.createNewPartImg(nivParts, meanStdvList[1], cropedNivBmp.Width, cropedNivBmp.Height, cropImgWidth, cropImgHeight);
 
             var finalStdv = stdDiv.CalcFinalDev(meanStdvList[1]);
-
-            Debug.WriteLine(finalStdv);
 
             var picMean = 0d;
 

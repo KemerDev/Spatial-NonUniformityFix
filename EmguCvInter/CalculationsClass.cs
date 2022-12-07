@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing.Imaging;
+using System.Diagnostics;
 
 namespace EmguCvInter
 {
@@ -64,6 +66,34 @@ namespace EmguCvInter
             }
 
             return partsArray;
+        }
+
+        public unsafe double FindArrayMaxVal(Bitmap bmp)
+        {
+
+            double maxPixelVal = 0;
+
+            BitmapData bitmapDataTile = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+
+            byte* TilePointer = (byte*)bitmapDataTile.Scan0;
+
+            for (int i = 0; i < bitmapDataTile.Height; i++)
+            {
+                for (int j = 0; j < bitmapDataTile.Width; j++)
+                {
+
+                    maxPixelVal = Math.Max(maxPixelVal, TilePointer[0]);
+
+
+                    TilePointer += 4;
+                }
+
+                TilePointer += bitmapDataTile.Stride - (bitmapDataTile.Width * 4);
+            }
+
+            bmp.UnlockBits(bitmapDataTile);
+
+            return maxPixelVal;
         }
 
         public Rectangle createRectangle(int x1, int y1, int x2, int y2)
