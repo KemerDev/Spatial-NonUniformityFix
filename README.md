@@ -5,6 +5,9 @@ one of them is Spatial non-uniformity that yields bright and dark regions in the
 
 ## Example image of non uniformed image
 
+Spliting the image in 12 equal parts, we calculate the standard deviation of the pixel value in each part and construct
+a new image, which can help us see the non uniformity clearer.
+
 ![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/original.PNG "Our non uniformed image")
 ![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/parts.PNG "Our non uniformed image")
 
