@@ -10,7 +10,7 @@ namespace EmguCvInter
     {
         OpenImagesClass UnprocessedImageList = new OpenImagesClass();
         OpenImagesClass NivImageList = new OpenImagesClass();
-        
+
 
         private int counterImg = -1;
         private int counterNiv = -1;

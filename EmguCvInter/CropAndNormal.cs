@@ -72,6 +72,9 @@ namespace EmguCvInter
 
                 calculations.Dispose();
 
+                this.p2.Image = cropedTile.ToBitmap();
+                this.p3.Image = cropedNiv.ToBitmap();
+
             }
             catch (Exception ex)
             {
@@ -299,8 +302,6 @@ namespace EmguCvInter
             var cropImgWidth = cropedTileBmp.Width / cols;
             var cropImgHeight = cropedTileBmp.Height / rows;
 
-            this.p2.Image = nivalated;
-
             var picNiv = nivalated.ToImage<Gray, byte>();
 
             var smoothNiv = new Image<Gray, byte>(nivalated.Width, nivalated.Height);
@@ -311,16 +312,10 @@ namespace EmguCvInter
 
             CvInvoke.Divide(picNiv, smoothNiv, dividedNiv, maxPixelVal);
 
-            this.p4.Image = smoothNiv.ToBitmap();
-
-            this.p5.Image = dividedNiv.ToBitmap();
-
             var nivParts = calculations.SplitImageToParts(dividedNiv.ToBitmap(), rows, cols);
             var meanStdvList = calculations.CalcPartMeanStdv(nivParts, rows, cols);
 
-            this.p3.Image = stdDiv.createNewPartImg(nivParts, meanStdvList[1], cropedNivBmp.Width, cropedNivBmp.Height, cropImgWidth, cropImgHeight);
-
-            var finalStdv = stdDiv.CalcFinalDev(meanStdvList[1]);
+            this.p4.Image = stdDiv.createNewPartImg(nivParts, meanStdvList[1], cropedNivBmp.Width, cropedNivBmp.Height, cropImgWidth, cropImgHeight);
 
             var picMean = 0d;
 
@@ -352,6 +347,8 @@ namespace EmguCvInter
                 fileWrite.WriteLine(space);
                 fileWrite.Flush();
             }
+
+            this.p5.Image = dividedNiv.ToBitmap();
 
             dividedNiv.ToBitmap().Save(savePathProc + Count.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
         }
