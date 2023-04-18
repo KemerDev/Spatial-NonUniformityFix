@@ -17,7 +17,7 @@ namespace EmguCvInter
         private int Count;
         private int rows = 4;
         private int cols = 3;
-        private Bitmap nivalated = null;
+        private Bitmap normalized = null;
         private Bitmap cropedTileBmp = null;
         private Bitmap cropedNivBmp = null;
         private Bitmap cropedNivFinalBmp = null;
@@ -246,7 +246,7 @@ namespace EmguCvInter
 
         public void normalization()
         {
-            nivalated = new Bitmap(cropedTileBmp.Width, cropedTileBmp.Height, PixelFormat.Format32bppRgb);
+            normalized = new Bitmap(cropedTileBmp.Width, cropedTileBmp.Height, PixelFormat.Format32bppRgb);
 
             Debug.WriteLine(maxPixelVal);
 
@@ -257,7 +257,7 @@ namespace EmguCvInter
 
                 BitmapData bitmapDataTile = cropedTileBmp.LockBits(new Rectangle(0, 0, cropedTileBmp.Width, cropedTileBmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
                 BitmapData bitmapDataNiv = cropedNivBmp.LockBits(new Rectangle(0, 0, cropedNivBmp.Width, cropedNivBmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
-                BitmapData bitmapNivalated = nivalated.LockBits(new Rectangle(0, 0, nivalated.Width, nivalated.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
+                BitmapData bitmapNivalated = normalized.LockBits(new Rectangle(0, 0, normalized.Width, normalized.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
 
                 byte* TilePointer = (byte*)bitmapDataTile.Scan0;
                 byte* NivPointer = (byte*)bitmapDataNiv.Scan0;
@@ -287,7 +287,7 @@ namespace EmguCvInter
 
                 cropedTileBmp.UnlockBits(bitmapDataTile);
                 cropedNivBmp.UnlockBits(bitmapDataNiv);
-                nivalated.UnlockBits(bitmapNivalated);
+                normalized.UnlockBits(bitmapNivalated);
             }
 
             sw.Stop();
@@ -302,17 +302,17 @@ namespace EmguCvInter
             var cropImgWidth = cropedTileBmp.Width / cols;
             var cropImgHeight = cropedTileBmp.Height / rows;
 
-            var picNiv = nivalated.ToImage<Gray, byte>();
+            var picNiv =normalized.ToImage<Gray, byte>();
 
-            var smoothNiv = new Image<Gray, byte>(nivalated.Width, nivalated.Height);
+            var smoothNiv = new Image<Gray, byte>(normalized.Width,normalized.Height);
 
             CvInvoke.GaussianBlur(picNiv, smoothNiv, new Size(33, 33), 0, 0);
 
-            var dividedNiv = new Image<Gray, byte>(nivalated.Width, nivalated.Height);
+            var dividedNiv = new Image<Gray, byte>(normalized.Width,normalized.Height);
 
             CvInvoke.Divide(picNiv, smoothNiv, dividedNiv, maxPixelVal);
 
-            var nivParts = calculations.SplitImageToParts(dividedNiv.ToBitmap(), rows, cols);
+            var nivParts = calculations.SplitImageToParts(normalized, rows, cols);
             var meanStdvList = calculations.CalcPartMeanStdv(nivParts, rows, cols);
 
             this.p4.Image = stdDiv.createNewPartImg(nivParts, meanStdvList[1], cropedNivBmp.Width, cropedNivBmp.Height, cropImgWidth, cropImgHeight);
