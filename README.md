@@ -3,4 +3,4 @@
 Different lighting conditions can lead to non-uniformities in an image plane,
 one of them is Spatial non-uniformity that yields bright and dark regions in the target plane.
 
-![alt text](https://github.com/KemerDev/Spatial-NonUniformityFix/edit/master/ "Logo Title Text 1")
+![alt text](https://github.com/KemerDev/Spatial-NonUniformityFix/images/original.PNG "Logo Title Text 1")
