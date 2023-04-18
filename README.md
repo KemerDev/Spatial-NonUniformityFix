@@ -26,6 +26,7 @@ normalizing it using the pixel values of both our images and finally applying ga
 Of course gaussian blurring and per-element division help preserve our planes texture, that's the purpose after all,
 fixing non uniformity while keeping the target plane's texture.
 
+
 ## Final product and its standard deviation visualised.
 
 ![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/finalProduct.PNG "fixed plane")
