@@ -11,3 +11,9 @@ one of them is Spatial non-uniformity that yields bright and dark regions in the
 
 ![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/whiteEq.PNG "Our non uniformed images")
 
+![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/target.PNG "Our non uniformed target")
+
+We can instantly tell the problem that occurs which can ultimately lead to machine detection problems, of little fine details,
+especially when our light setup, hits our target plane not only from above but from an angle causing shadows.
+
+![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/finalProduct.PNG "fixed plane")
