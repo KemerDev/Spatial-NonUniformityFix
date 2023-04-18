@@ -21,6 +21,9 @@ We can instantly tell the problem that occurs which can ultimately lead to machi
 especially when our light setup, hits our target plane not only from above but from an angle causing shadows.
 
 For fixing the problem we first crop both non uniformed image and it's translated white plane to our desired width and height,
+normalizing it using the pixel values of both our images and finally applying gaussian blur and per-element division.
 
+## Final product and its standard deviation.
 
 ![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/finalProduct.PNG "fixed plane")
+![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/stdDiv.PNG "fixed plane stdDiv")
