@@ -37,7 +37,7 @@ namespace EmguCvInter
 
                 if (countImg > -1 && countImg < imageUnList.Count)
                 {
-                    pictureBox1.Image = imageUnList[countImg].ToBitmap();
+                    //pictureBox1.Image = imageUnList[countImg].ToBitmap();
                     processedImageCC.CropImage(imageUnList[countImg], imageNivList[countNiv]);
                     //processedImageCC.NivImgHomogeity();
                     processedImageCC.NivalationUn();

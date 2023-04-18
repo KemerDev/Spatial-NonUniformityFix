@@ -19,7 +19,7 @@ namespace EmguCvInter
             List<Image<Bgr, Byte>> imageList = new List<Image<Bgr, byte>>();
             try
             {
-                string[] fileArray = Directory.GetFiles(@"C:\Users\kemerios\Desktop\imageProcess\unprosF");
+                string[] fileArray = Directory.GetFiles(@"D:\temp\tempF");
 
                 foreach (string file in fileArray)
                 {
@@ -43,7 +43,7 @@ namespace EmguCvInter
 
             try
             {
-                string[] fileArray = Directory.GetFiles(@"C:\Users\kemerios\Desktop\imageProcess\normal_maps");
+                string[] fileArray = Directory.GetFiles(@"D:\temp\temp_maps");
 
                 foreach (string file in fileArray)
                 {

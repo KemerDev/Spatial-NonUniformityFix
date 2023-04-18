@@ -293,8 +293,8 @@ namespace EmguCvInter
 
         public void graphPrepare()
         {
-            string savePathCsv = "C:\\Users\\kemerios\\Desktop\\imageProcess\\graphStuff\\";
-            string savePathProc = "C:\\Users\\kemerios\\Desktop\\imageProcess\\procesed\\";
+            string savePathCsv = @"D:/temp/";
+            string savePathProc = @"D:/temp/";
 
             var cropImgWidth = cropedTileBmp.Width / cols;
             var cropImgHeight = cropedTileBmp.Height / rows;
