@@ -6,3 +6,8 @@ one of them is Spatial non-uniformity that yields bright and dark regions in the
 ## Example image of non uniformed image
 
 ![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/original.PNG "Our non uniformed image")
+
+## Example image of the above image's non uniformity in a white plane
+
+![nonUniform](https://github.com/KemerDev/Spatial-NonUniformityFix/blob/master/images/whiteEq.PNG "Our non uniformed images")
+
