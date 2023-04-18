@@ -24,7 +24,7 @@ For fixing the problem we first crop both non uniformed image and it's translate
 normalizing it using the pixel values of both our images and finally applying gaussian blur and per-element division.
 
 Of course gaussian blurring and per-element division help preserve our planes texture, that's the purpose after all,
-fixing non uniformity while keeping the target plane's texture.
+fixing non uniformity while preserving target plane's texture.
 
 
 ## Final product and its standard deviation visualised.
