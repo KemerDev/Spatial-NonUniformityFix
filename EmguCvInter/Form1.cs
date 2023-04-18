@@ -40,7 +40,7 @@ namespace EmguCvInter
                     //pictureBox1.Image = imageUnList[countImg].ToBitmap();
                     processedImageCC.CropImage(imageUnList[countImg], imageNivList[countNiv]);
                     //processedImageCC.NivImgHomogeity();
-                    processedImageCC.NivalationUn();
+                    processedImageCC.normalization();
                     //processedImageCC.Nivalation();
                     processedImageCC.graphPrepare();
                 }

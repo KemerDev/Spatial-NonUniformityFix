@@ -244,7 +244,7 @@ namespace EmguCvInter
             }
         }*/
 
-        public void NivalationUn()
+        public void normalization()
         {
             nivalated = new Bitmap(cropedTileBmp.Width, cropedTileBmp.Height, PixelFormat.Format32bppRgb);
 
